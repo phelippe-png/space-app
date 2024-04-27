@@ -18,14 +18,20 @@
       "bundleIdentifier": "com.space.app.space-app",
       "requireFullScreen": true,
       "infoPlist": {
-        "NSCameraUsageDescription": "Permitir fazer a leitura do QRCode? Você deve apontar a câmera para o QRCode gerado no ERP da Space."
+        "NSCameraUsageDescription": "Permitir fazer a leitura do QRCode? Você deve apontar a câmera para o QRCode gerado no ERP da Space.",
+        "NSMicrophoneUsageDescription": "Allow $(PRODUCT_NAME) to access your microphone"
       }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.space.app.spaceapp"
     },
     "plugins": [
       [
@@ -49,6 +55,11 @@
     ],
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "03eeb04a-9a4d-4a69-b02e-e6ee3cd5e420"
+      }
     }
   }
 }
