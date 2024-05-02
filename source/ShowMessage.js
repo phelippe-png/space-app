@@ -8,11 +8,9 @@ const messageType = (type) => {
     switch (type) {
         case 'error':
             return <MaterialIcons name="highlight-remove" style={{ fontSize: 100, color: 'red' }}></MaterialIcons>
-            break;
 
         case 'warning':
             return <MaterialIcons name="warning" style={{ fontSize: 100, color: 'orange' }}></MaterialIcons>
-            break;
 
         default:
             break;

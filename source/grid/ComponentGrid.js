@@ -204,7 +204,11 @@ const Grid = (props) => {
           <View key={index} style={[{width: DataWidthColumn[column]}, styles.lineGridDataSet]}>
             {
               props.drawColumnCell == undefined || props.drawColumnCell.find((element) => element.field == column) == undefined ? 
-                <Text adjustsFontSizeToFit={true} numberOfLines={1} style={[styles.gridText, StringIsNumber(item[column]) && {textAlign: 'right'}]}>
+                <Text 
+                  adjustsFontSizeToFit={true} 
+                  numberOfLines={1} 
+                  style={[styles.gridText, StringIsNumber(item[column]) && {textAlign: 'right'}]}
+                >
                   {fieldTypesFloat.current.find((e) => e == props.dataSet['fieldTypes'][column]) != undefined ? FormatFloat(item[column]) : item[column]}
                 </Text> 
                 : 
@@ -240,9 +244,10 @@ const Grid = (props) => {
               data={filteredDataSet}
               renderItem={ContentGrid}
               refreshControl={
-                <RefreshControl onRefresh={props.onRefresh} tintColor={'#072e3f'} colors={['#072e3f']} />
+                props.onRefresh != undefined &&
+                  <RefreshControl onRefresh={props.onRefresh} tintColor={'#072e3f'} colors={['#072e3f']} />
               }
-              ItemSeparatorComponent={() => (<View style={{ height: 0.5, backgroundColor: "#cdcaca" }}></View>)}
+              // ItemSeparatorComponent={() => (<View style={{ height: 0.5, backgroundColor: "#cdcaca" }}></View>)}
               onEndReached={() => isLoading = false}
               ListFooterComponent={load => {}}
             />

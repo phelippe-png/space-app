@@ -170,6 +170,9 @@ const ConsultaProduto = ({ navigation }) => {
           headerShown: false,
           animation: 'fade_from_bottom',
         }}
+        initialParams={{
+          firstNavigation: navigation
+        }}
       />
     </Stack.Navigator>
   )
