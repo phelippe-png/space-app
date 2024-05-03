@@ -1,4 +1,4 @@
-import { Alert, Dimensions, Image, SafeAreaView, StyleSheet, Text, TouchableOpacity } from "react-native"
+import { Alert, Dimensions, Image, Platform, SafeAreaView, StyleSheet, Text, TouchableOpacity } from "react-native"
 import { AutoFocus, Camera } from 'expo-camera'
 import { View } from "react-native"
 import { useEffect, useRef, useState } from "react"
@@ -10,33 +10,21 @@ import FormatFloat from "../../functions/FormatFloat"
 import Grid from "../grid/ComponentGrid"
 import Icon_Ionic from "react-native-vector-icons/Ionicons";
 import ShowMessage from "../ShowMessage"
+import SelectDropdown from "react-native-select-dropdown"
 
 const ScreenConsultaProduto = ({navigation, route}) => {
-  route.params.firstNavigation.setOptions({
-    headerRight: () => (
-      <TouchableOpacity>
-        <Icon_Ionic
-          name="camera"
-          style={{ color: "white", fontSize: 25, marginRight: 10, padding: 8 }}
-          onPress={() => {
-            ean.current = ''
-            cameraOn.current = true
-            setResponse({})
-          }}
-        ></Icon_Ionic>
-      </TouchableOpacity>
-    ),
-  });
-
   const ean = useRef()
   const widthScreen = Dimensions.get('window').width
   const heightScreen = Dimensions.get('window').height
   const [user, setUser] = useState({})
   const [response, setResponse] = useState({})
+  const [forceUpdate, setForceUpdate] = useState(false)
+  const filteredStock = useRef([])
   const cameraOn = useRef(true)
   const showMessageModal = useRef(false)
   const textMessage = useRef()
   const messageType = useRef()
+  const itemIndexComboBox = useRef()
   const [permission, requestPermission] = Camera.useCameraPermissions();
 
   useEffect(() => { 
@@ -61,10 +49,21 @@ const ScreenConsultaProduto = ({navigation, route}) => {
             showMessageModal.current = true
             setResponse({})
           } else {
+            response.data?.tamanhos?.map((e, index) => { 
+              if (e == response.data?.tamanho)
+                itemIndexComboBox.current = index
+            })
+
+            let filterEstoque = response.data?.estoque != undefined ? JSON.stringify(response.data?.estoque) : response.data?.estoque
+            filterEstoque = JSON.parse(filterEstoque)
+            filterEstoque.response = filterEstoque?.response.filter((e) => e.legenda == response.data?.tamanho)
+            filteredStock.current = filterEstoque
+
             cameraOn.current = false
             setResponse(response.data)
           }
         }).catch((e) => {
+          console.log(e)
           messageType.current = 'error'
           textMessage.current = 'ERRO AO BUSCAR PRODUTO!'
           showMessageModal.current = true
@@ -73,6 +72,15 @@ const ScreenConsultaProduto = ({navigation, route}) => {
 
       ean.current = data.data
     }
+  }
+
+  const filterSize = (size) => {
+    let filterEstoque = response?.estoque != undefined ? JSON.stringify(response?.estoque) : response?.estoque
+    filterEstoque = JSON.parse(filterEstoque)
+    filterEstoque.response = filterEstoque?.response.filter((e) => e.legenda == size)
+    filteredStock.current = filterEstoque
+
+    setForceUpdate(!forceUpdate)
   }
 
   const ProductInformations = (props) => {
@@ -103,17 +111,17 @@ const ScreenConsultaProduto = ({navigation, route}) => {
     )
   }
 
-  if (!permission?.granted) {
-    Alert.alert('Informação', 'Precisamos da sua permissão para ligar a câmera.', [
-      {
-        text: 'Não permitir'
-      },
-      {
-        text: 'Permitir',
-        onPress: requestPermission
-      }
-    ])
-  } else
+  // if (!permission?.granted) {
+  //   Alert.alert('Informação', 'Precisamos da sua permissão para ligar a câmera.', [
+  //     {
+  //       text: 'Não permitir'
+  //     },
+  //     {
+  //       text: 'Permitir',
+  //       onPress: requestPermission
+  //     }
+  //   ])
+  // } else
   return (
     <View style={{flex: 1}}>
       {
@@ -159,34 +167,48 @@ const ScreenConsultaProduto = ({navigation, route}) => {
           <SafeAreaView style={{flex: 1}}>
             {
               (stockPermission != undefined && stockPermission.permissao) ? (
-                <View style={{flexDirection: "row"}}>
-                  <View style={{flex: 2, alignItems: "center", justifyContent: "center"}}>
-                    <Image 
-                      src={response?.caminhoimagem} 
-                      style={{
-                        width: 130,
-                        height: 130,
-                        borderWidth: 0.5,
-                        borderColor: 'black',
-                        margin: 10
-                      }}
-                    />
+                <View>
+                  <View style={{flexDirection: "row"}}>
+                    <View style={{flex: 2, alignItems: "center", justifyContent: "center"}}>
+                      <Image 
+                        src={response?.caminhoimagem} 
+                        style={{
+                          width: 130,
+                          height: 130,
+                          borderWidth: 0.5,
+                          borderColor: 'black',
+                          margin: 10
+                        }}
+                      />
+                    </View>
+
+                    <View style={{flex: 3, justifyContent: "center"}}>
+                      <ProductInformations
+                        styleText={{
+                          productTitleInformation: {
+                            fontFamily: 'Lato_700Bold',
+                            fontSize: 15,
+                            margin: 3
+                          },
+                          productInformation: {
+                            fontFamily: 'Lato_400Regular',
+                            fontSize: 15,
+                            margin: 3
+                          }
+                        }}
+                      />
+                    </View>
                   </View>
 
-                  <View style={{flex: 3, justifyContent: "center"}}>
-                    <ProductInformations
-                      styleText={{
-                        productTitleInformation: {
-                          fontFamily: 'Lato_700Bold',
-                          fontSize: 15,
-                          margin: 3
-                        },
-                        productInformation: {
-                          fontFamily: 'Lato_400Regular',
-                          fontSize: 15,
-                          margin: 3
-                        }
-                      }}
+                  <View style={{width: '100%', alignItems: "center", marginBottom: 10}}>
+                    <Text style={{width: '95%', fontFamily: 'Lato_700Bold'}}>Filtrar tamanho:</Text>
+                    <SelectDropdown 
+                      data={response?.tamanhos}
+                      buttonStyle={{width: '95%', height: 40, backgroundColor: Platform.OS == 'ios' ? '#EDEDED' : '#DBDFDF', borderRadius: 7}}
+                      buttonTextStyle={{fontFamily: 'Lato_400Regular', fontSize: 17 }}
+                      rowTextStyle={{fontFamily: 'Lato_400Regular'}}
+                      defaultValueByIndex={itemIndexComboBox.current}
+                      onSelect={(item, i) => { filterSize(item) }}
                     />
                   </View>
                 </View>
@@ -204,7 +226,7 @@ const ScreenConsultaProduto = ({navigation, route}) => {
                     />
                   </View>
 
-                  <View style={{flex: 3, alignItems: "center"}}>
+                  <View style={{flex: 2.7, alignItems: "center"}}>
                     <ProductInformations
                       styleText={{
                         productTitleInformation: {
@@ -227,10 +249,27 @@ const ScreenConsultaProduto = ({navigation, route}) => {
             {
               (stockPermission != undefined && stockPermission.permissao) &&
                 <Grid
-                  dataSet={response?.estoque}
+                  dataSet={filteredStock.current}
                   activePageControl={false}
+                  invisibleColumns={[
+                    'legenda'
+                  ]}
                 />
             }
+
+            <View style={{width: '100%', alignItems: "center"}}>
+              <TouchableOpacity 
+                style={styles.buttonRead} 
+                onPress={() => {
+                  ean.current = ''
+                  cameraOn.current = true
+                  setResponse({})
+                }}
+              >
+                <Icon_Ionic name="camera" style={{ color: "white", fontSize: 25, marginRight: 10, padding: 8 }}/>
+                <Text style={{color: 'white', fontFamily: 'Lato_700Bold'}}>FAZER LEITURA NOVAMENTE</Text>
+              </TouchableOpacity>
+            </View>
           </SafeAreaView>
         )
       }
@@ -266,6 +305,18 @@ const styles = StyleSheet.create({
     borderLeftColor: 'rgba(52, 52, 52, 0.8)',
     borderRightColor: 'rgba(52, 52, 52, 0.8)',
     borderBottomColor: 'rgba(52, 52, 52, 0.8)',
+  },
+
+  buttonRead: {
+    width: '90%', 
+    height: 50, 
+    borderRadius: 10, 
+    backgroundColor: '#072e3f',
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: 'row',
+    elevation: 7,
+    margin: 10
   }
 })
 
