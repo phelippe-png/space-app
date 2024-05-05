@@ -156,7 +156,8 @@ export default function App() {
           drawerLabelStyle: {
             color: 'white',
             fontFamily: 'Lato_700Bold'
-          }
+          },
+          unmountOnBlur: true
         }}
         drawerContent={props => DrawerContent(props)}
       >

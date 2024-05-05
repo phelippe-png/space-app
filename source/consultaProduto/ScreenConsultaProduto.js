@@ -9,6 +9,7 @@ import base64 from "react-native-base64"
 import FormatFloat from "../../functions/FormatFloat"
 import Grid from "../grid/ComponentGrid"
 import Icon_Ionic from "react-native-vector-icons/Ionicons";
+import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 import ShowMessage from "../ShowMessage"
 import SelectDropdown from "react-native-select-dropdown"
 
@@ -25,6 +26,7 @@ const ScreenConsultaProduto = ({navigation, route}) => {
   const textMessage = useRef()
   const messageType = useRef()
   const itemIndexComboBox = useRef()
+  const filteredSku = useRef()
   const [permission, requestPermission] = Camera.useCameraPermissions();
 
   useEffect(() => { 
@@ -49,14 +51,20 @@ const ScreenConsultaProduto = ({navigation, route}) => {
             showMessageModal.current = true
             setResponse({})
           } else {
-            response.data?.tamanhos?.map((e, index) => { 
-              if (e == response.data?.tamanho)
+            response.data?.skus?.map((e, index) => {
+              if (e?.eans?.find(i => i == ean.current) != undefined) {
                 itemIndexComboBox.current = index
+                filteredSku.current = e
+              }
             })
+
+            console.log(ean.current)
+            console.log(itemIndexComboBox.current)
+            console.log(filteredSku.current)
 
             let filterEstoque = response.data?.estoque != undefined ? JSON.stringify(response.data?.estoque) : response.data?.estoque
             filterEstoque = JSON.parse(filterEstoque)
-            filterEstoque.response = filterEstoque?.response.filter((e) => e.legenda == response.data?.tamanho)
+            filterEstoque.response = filterEstoque?.response.filter((e) => e.legenda == filteredSku.current?.legenda)
             filteredStock.current = filterEstoque
 
             cameraOn.current = false
@@ -80,6 +88,13 @@ const ScreenConsultaProduto = ({navigation, route}) => {
     filterEstoque.response = filterEstoque?.response.filter((e) => e.legenda == size)
     filteredStock.current = filterEstoque
 
+    response?.skus?.map((e, index) => {
+      if (e.legenda == size) {
+        itemIndexComboBox.current = index
+        filteredSku.current = e
+      }
+    })
+
     setForceUpdate(!forceUpdate)
   }
 
@@ -89,8 +104,13 @@ const ScreenConsultaProduto = ({navigation, route}) => {
         <Text style={props?.styleText?.productTitleInformation}>{response?.descricao}</Text>
 
         <Text style={props?.styleText?.productTitleInformation}>
-          Código:
-          <Text style={props?.styleText?.productInformation}> {response?.id}</Text>
+          Produto:
+          <Text style={props?.styleText?.productInformation}> {response?.produto}</Text>
+        </Text>
+
+        <Text style={props?.styleText?.productTitleInformation}>
+          SKU:
+          <Text style={props?.styleText?.productInformation}> {filteredSku.current?.sku}</Text>
         </Text>
 
         <Text style={props?.styleText?.productTitleInformation}>
@@ -98,15 +118,7 @@ const ScreenConsultaProduto = ({navigation, route}) => {
           <Text style={props?.styleText?.productInformation}> {response?.cor}</Text>
         </Text>
 
-        <Text style={props?.styleText?.productTitleInformation}>
-          Tamanho: 
-          <Text style={props?.styleText?.productInformation}> {response?.tamanho}</Text>
-        </Text>
-
-        <Text style={props?.styleText?.productTitleInformation}>
-          Preço:
-          <Text style={props?.styleText?.productInformation}> {FormatFloat(response?.preco, 'R$')}</Text>
-        </Text>
+        <Text style={props?.styleText?.price}>{FormatFloat(response?.preco, 'R$')}</Text>
       </View>
     )
   }
@@ -162,6 +174,16 @@ const ScreenConsultaProduto = ({navigation, route}) => {
             <Text style={styles.caption}>
               Aponte a câmera para o código de barras
             </Text>
+
+            {
+              JSON.stringify(response) != '{}' &&
+                <View style={{width: '100%', height: '100%', position: "absolute", alignItems: "center", justifyContent: "flex-end"}}>
+                  <TouchableOpacity style={styles.buttonCancel} onPress={() => { cameraOn.current = false; setForceUpdate(!forceUpdate) }}>
+                    <MaterialIcons name="cancel" style={{ color: "white", fontSize: 25, marginRight: 5 }}/>
+                    <Text style={{color: 'white', fontFamily: 'Lato_700Bold', fontSize: 20}}>CANCELAR</Text>
+                  </TouchableOpacity>
+                </View>
+            }
           </SafeAreaView>
         ) : (
           <SafeAreaView style={{flex: 1}}>
@@ -193,6 +215,11 @@ const ScreenConsultaProduto = ({navigation, route}) => {
                           productInformation: {
                             fontFamily: 'Lato_400Regular',
                             fontSize: 15,
+                            margin: 3
+                          },
+                          price: {
+                            fontFamily: 'Lato_700Bold',
+                            fontSize: 25,
                             margin: 3
                           }
                         }}
@@ -238,6 +265,11 @@ const ScreenConsultaProduto = ({navigation, route}) => {
                           fontFamily: 'Lato_400Regular',
                           fontSize: 25,
                           margin: 3
+                        },
+                        price: {
+                          fontFamily: 'Lato_700Bold',
+                          fontSize: 35,
+                          margin: 3
                         }
                       }}
                     />
@@ -263,7 +295,7 @@ const ScreenConsultaProduto = ({navigation, route}) => {
                 onPress={() => {
                   ean.current = ''
                   cameraOn.current = true
-                  setResponse({})
+                  setForceUpdate(!forceUpdate)
                 }}
               >
                 <Icon_Ionic name="camera" style={{ color: "white", fontSize: 25, marginRight: 10, padding: 8 }}/>
@@ -317,6 +349,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     elevation: 7,
     margin: 10
+  },
+
+  buttonCancel: {
+    width: '90%', 
+    height: 60, 
+    borderRadius: 10, 
+    backgroundColor: '#F72019',
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: 'row',
+    elevation: 7,
+    margin: 15
   }
 })
 
