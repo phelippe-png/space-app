@@ -51,16 +51,15 @@ const ScreenConsultaProduto = ({navigation, route}) => {
             showMessageModal.current = true
             setResponse({})
           } else {
+            response.data.skus = response.data.skus.sort((a, b) => (a.legenda - b.legenda))
+            response.data.tamanhos = response.data.tamanhos.sort((a, b) => (a - b))
+
             response.data?.skus?.map((e, index) => {
               if (e?.eans?.find(i => i == ean.current) != undefined) {
                 itemIndexComboBox.current = index
                 filteredSku.current = e
               }
             })
-
-            console.log(ean.current)
-            console.log(itemIndexComboBox.current)
-            console.log(filteredSku.current)
 
             let filterEstoque = response.data?.estoque != undefined ? JSON.stringify(response.data?.estoque) : response.data?.estoque
             filterEstoque = JSON.parse(filterEstoque)
